@@ -8,13 +8,13 @@ mod state;
 fn main() {
     println!("PedalPhile is running");
     mki::bind_key(Keyboard::F13, Action::handle_kb(|_key| {
-        module::handle_key(module::RelativeKey::LEFT);
+        module::handle_key(module::RelativeKey::Left);
     }));
     mki::bind_key(Keyboard::F14, Action::handle_kb(|_key| {
-        module::handle_key(module::RelativeKey::MID);
+        module::handle_key(module::RelativeKey::Middle);
     }));
     mki::bind_key(Keyboard::F15, Action::handle_kb(|_key| {
-        module::handle_key(module::RelativeKey::RIGHT);
+        module::handle_key(module::RelativeKey::Right);
     }));
 
     loop {

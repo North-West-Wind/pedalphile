@@ -4,32 +4,35 @@ use crate::state::{get_app, get_mut_app};
 
 mod voice;
 
+#[derive(PartialEq, Eq)]
 pub enum RelativeKey {
-	LEFT,
-	MID,
-	RIGHT
+	Left,
+	Middle,
+	Right,
+	Invalid
 }
 
 pub fn handle_key(key: RelativeKey) {
 	let app = get_mut_app();
 	match key {
-		RelativeKey::MID => {
+		RelativeKey::Middle => {
 			toggle_cat_act();
 		}
-		RelativeKey::LEFT => {
+		RelativeKey::Left => {
 			if app.module_change {
 				input_cat_act(false);
 			} else {
 				app.module.handle_left();
 			}
 		}
-		RelativeKey::RIGHT => {
+		RelativeKey::Right => {
 			if app.module_change {
 				input_cat_act(true);
 			} else {
 				app.module.handle_right();
 			}
 		}
+		_ => {}
 	}
 }
 
@@ -84,7 +87,7 @@ impl LeftRightHandler for Modules {
 impl Modules {
 	pub const fn get_module(cat: u8) -> Modules {
 		match cat {
-			0 => Modules::Voice(VoiceModule {}),
+			0 => Modules::Voice(VoiceModule {  }),
 			_ => Modules::Dummy
 		}
 	}
