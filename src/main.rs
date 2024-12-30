@@ -1,11 +1,14 @@
 use std::{thread::sleep, time::Duration};
 
+use config::load_config;
 use mki::{Action, Keyboard};
 
+mod config;
 mod module;
 mod state;
 
 fn main() {
+    load_config();
     println!("Running");
     mki::bind_key(Keyboard::F13, Action::handle_kb(|_key| {
         module::handle_key(module::RelativeKey::Left);

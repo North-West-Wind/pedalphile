@@ -2,9 +2,9 @@ use std::process::Command;
 
 use mki::Keyboard;
 
-use crate::state::get_mut_app;
+use crate::state::{get_mut_app, SaveState};
 
-use super::{LeftRightHandler, MiddleHandler};
+use super::{LeftRightHandler, MiddleHandler, SaveStateUser};
 
 #[derive(PartialEq, Eq)]
 enum EditMode {
@@ -83,5 +83,17 @@ impl MiddleHandler for SoundboardModule {
 		self.tmp = 0;
 
 		return true;
+	}
+}
+
+impl SaveStateUser for SoundboardModule {
+	fn load(&mut self, save_state: &SaveState) {
+		self.id = save_state.soundboard_id;
+		self.dir = (self.id >> 5) as u8;
+		self.file = (self.id & 0x1F) as u8;
+	}
+
+	fn save(&mut self, save_state: &mut SaveState) {
+		save_state.soundboard_id = self.id;
 	}
 }

@@ -1,9 +1,11 @@
+use save::SaveModule;
 use soundboard::SoundboardModule;
 use voice::VoiceModule;
 
-use crate::state::get_mut_app;
+use crate::state::{get_mut_app, SaveState};
 
-mod soundboard;
+mod save;
+pub mod soundboard;
 mod voice;
 
 #[derive(PartialEq, Eq)]
@@ -11,7 +13,6 @@ pub enum RelativeKey {
 	Left,
 	Middle,
 	Right,
-	Invalid
 }
 
 pub fn handle_key(key: RelativeKey) {
@@ -36,14 +37,15 @@ pub fn handle_key(key: RelativeKey) {
 				app.module.handle_right();
 			}
 		}
-		_ => {}
 	}
 }
 
 fn toggle_cat_act() {
 	let app = get_mut_app();
 	if app.module_change {
+		app.module.save(&mut app.save_state);
 		app.module = Modules::get_module(app.module_tmp);
+		app.module.load(&app.save_state);
 		app.module_tmp = 0;
 		app.module_change = false;
 		println!("-> {}", app.module.name());
@@ -70,10 +72,17 @@ pub trait MiddleHandler {
 	fn handle_middle(&mut self) -> bool;
 }
 
+pub trait SaveStateUser {
+	fn load(&mut self, save_state: &SaveState);
+	fn save(&mut self, save_state: &mut SaveState);
+}
+
 pub enum Modules {
 	Dummy,
 	Voice(VoiceModule),
 	Soundboard(SoundboardModule),
+
+	Save(SaveModule),
 }
 
 impl LeftRightHandler for Modules {
@@ -82,6 +91,7 @@ impl LeftRightHandler for Modules {
 		match self {
 			Voice(module) => module.handle_left(),
 			Soundboard(module) => module.handle_left(),
+			Save(module) => module.handle_left(),
 			_ => {}
 		}
 	}
@@ -91,6 +101,7 @@ impl LeftRightHandler for Modules {
 		match self {
 			Voice(module) => module.handle_right(),
 			Soundboard(module) => module.handle_right(),
+			Save(module) => module.handle_right(),
 			_ => {}
 		}
 	}
@@ -106,12 +117,31 @@ impl MiddleHandler for Modules {
 	}
 }
 
+impl SaveStateUser for Modules {
+	fn load(&mut self, save_state: &SaveState) {
+		use Modules::*;
+		match self {
+			Soundboard(module) => module.load(save_state),
+			_ => {}
+		}
+	}
+
+	fn save(&mut self, save_state: &mut SaveState) {
+		use Modules::*;
+		match self {
+			Soundboard(module) => module.save(save_state),
+			_ => {}
+		}
+	}
+}
+
 impl Modules {
 	pub const fn get_module(cat: u8) -> Modules {
 		use Modules::*;
 		match cat {
 			0 => Voice(VoiceModule {  }),
 			1 => Soundboard(soundboard::create_module()),
+			255 => Save(SaveModule {  }),
 			_ => Dummy
 		}
 	}
@@ -121,7 +151,8 @@ impl Modules {
 		match self {
 			Dummy => "Dummy",
 			Voice(_) => "Voice",
-			Soundboard(_) => "Soundboard"
+			Soundboard(_) => "Soundboard",
+			Save(_) => "Save",
 		}
 	}
 
@@ -130,7 +161,8 @@ impl Modules {
 		match self {
 			Dummy => "dum",
 			Voice(_) => "voi",
-			Soundboard(_) => "snd"
+			Soundboard(_) => "snd",
+			Save(_) => "sav",
 		}
 	}
 }
