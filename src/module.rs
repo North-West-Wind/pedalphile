@@ -1,7 +1,9 @@
+use soundboard::SoundboardModule;
 use voice::VoiceModule;
 
-use crate::state::{get_app, get_mut_app};
+use crate::state::get_mut_app;
 
+mod soundboard;
 mod voice;
 
 #[derive(PartialEq, Eq)]
@@ -16,7 +18,9 @@ pub fn handle_key(key: RelativeKey) {
 	let app = get_mut_app();
 	match key {
 		RelativeKey::Middle => {
-			toggle_cat_act();
+			if app.module_change || !app.module.handle_middle() {
+				toggle_cat_act();
+			}
 		}
 		RelativeKey::Left => {
 			if app.module_change {
@@ -42,7 +46,7 @@ fn toggle_cat_act() {
 		app.module = Modules::get_module(app.module_tmp);
 		app.module_tmp = 0;
 		app.module_change = false;
-		println!("Switched to module: {}", app.module.name());
+		println!("Module: {}", app.module.name());
 	} else {
 		app.module_change = true;
 	}
@@ -52,7 +56,7 @@ fn input_cat_act(up: bool) {
 	let app = get_mut_app();
 	app.module_tmp <<= 1;
 	if up {
-		app.module_tmp += 1;
+		app.module_tmp |= 1;
 	}
 }
 
@@ -61,9 +65,15 @@ pub trait LeftRightHandler {
 	fn handle_right(&mut self);
 }
 
+pub trait MiddleHandler {
+	// true = handled and no fallback
+	fn handle_middle(&mut self) -> bool;
+}
+
 pub enum Modules {
 	Dummy,
-	Voice(VoiceModule)
+	Voice(VoiceModule),
+	Soundboard(SoundboardModule),
 }
 
 impl LeftRightHandler for Modules {
@@ -71,6 +81,7 @@ impl LeftRightHandler for Modules {
 		use Modules::*;
 		match self {
 			Voice(module) => module.handle_left(),
+			Soundboard(module) => module.handle_left(),
 			_ => {}
 		}
 	}
@@ -79,23 +90,38 @@ impl LeftRightHandler for Modules {
 		use Modules::*;
 		match self {
 			Voice(module) => module.handle_right(),
+			Soundboard(module) => module.handle_right(),
 			_ => {}
+		}
+	}
+}
+
+impl MiddleHandler for Modules {
+	fn handle_middle(&mut self) -> bool {
+		use Modules::*;
+		match self {
+			Soundboard(module) => module.handle_middle(),
+			_ => false
 		}
 	}
 }
 
 impl Modules {
 	pub const fn get_module(cat: u8) -> Modules {
+		use Modules::*;
 		match cat {
-			0 => Modules::Voice(VoiceModule {  }),
-			_ => Modules::Dummy
+			0 => Voice(VoiceModule {  }),
+			1 => Soundboard(soundboard::create_module()),
+			_ => Dummy
 		}
 	}
 
 	pub fn name(&self) -> &str {
+		use Modules::*;
 		match self {
-			Modules::Dummy => "Dummy",
-			Modules::Voice(_) => "Voice"
+			Dummy => "Dummy",
+			Voice(_) => "Voice",
+			Soundboard(_) => "Soundboard"
 		}
 	}
 }

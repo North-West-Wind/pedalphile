@@ -1,4 +1,4 @@
-use std::ptr::{addr_of, addr_of_mut};
+use std::ptr::addr_of_mut;
 
 use crate::module::Modules;
 
@@ -21,6 +21,8 @@ pub fn get_mut_app() -> &'static mut App {
 	unsafe { &mut *(addr_of_mut!(APP)) }
 }
 
-pub fn get_app() -> &'static App {
-	unsafe { &*(addr_of!(APP)) }
+impl App {
+	pub fn println(&self, str: String) {
+		println!("[{}] {}", self.module.name(), str);
+	}
 }
