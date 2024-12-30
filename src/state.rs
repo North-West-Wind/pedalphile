@@ -23,6 +23,6 @@ pub fn get_mut_app() -> &'static mut App {
 
 impl App {
 	pub fn println(&self, str: String) {
-		println!("[{}] {}", self.module.name(), str);
+		println!("{}) {}", self.module.short_name(), str);
 	}
 }

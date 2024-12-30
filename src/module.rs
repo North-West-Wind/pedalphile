@@ -46,7 +46,7 @@ fn toggle_cat_act() {
 		app.module = Modules::get_module(app.module_tmp);
 		app.module_tmp = 0;
 		app.module_change = false;
-		println!("Module: {}", app.module.name());
+		println!("-> {}", app.module.name());
 	} else {
 		app.module_change = true;
 	}
@@ -122,6 +122,15 @@ impl Modules {
 			Dummy => "Dummy",
 			Voice(_) => "Voice",
 			Soundboard(_) => "Soundboard"
+		}
+	}
+
+	pub fn short_name(&self) -> &str {
+		use Modules::*;
+		match self {
+			Dummy => "dum",
+			Voice(_) => "voi",
+			Soundboard(_) => "snd"
 		}
 	}
 }

@@ -6,7 +6,7 @@ mod module;
 mod state;
 
 fn main() {
-    println!("PedalPhile is running");
+    println!("Running");
     mki::bind_key(Keyboard::F13, Action::handle_kb(|_key| {
         module::handle_key(module::RelativeKey::Left);
     }));

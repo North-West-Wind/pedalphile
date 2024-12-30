@@ -70,7 +70,7 @@ impl MiddleHandler for SoundboardModule {
 			self.edit_mode = EditMode::File;
 			if self.val_changed {
 				self.dir = self.tmp;
-				get_mut_app().println(format!("Dir: {}", self.dir));
+				get_mut_app().println(format!("{}/", self.dir));
 			}
 		} else if self.edit_mode == EditMode::File {
 			self.edit_mode = EditMode::None;
@@ -78,7 +78,7 @@ impl MiddleHandler for SoundboardModule {
 				self.file = self.tmp;
 			}
 			self.id = ((self.dir as u32) << 5) | self.file as u32;
-			get_mut_app().println(format!("File: {}/{}", self.dir, self.file));
+			get_mut_app().println(format!("{}/{}", self.dir, self.file));
 		}
 		self.tmp = 0;
 
