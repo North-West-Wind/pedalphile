@@ -11,7 +11,7 @@ enum EditMode {
 	File,
 }
 
-pub(super) struct SoundboardModule {
+pub struct SoundboardModule {
 	edit_mode: EditMode,
 	id: u32,
 	dir: u8,

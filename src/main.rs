@@ -10,7 +10,6 @@ mod state;
 
 fn main() {
     load_config();
-    println!("Running");
     mki::bind_any_key(double_fire_kb(|key, state| {
         use State::*;
         match state {

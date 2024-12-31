@@ -2,7 +2,7 @@ use std::process::Command;
 
 use super::{LeftRightHandler, RelativeKey};
 
-pub(super) struct VoiceModule {}
+pub struct VoiceModule {}
 
 impl LeftRightHandler for VoiceModule {
 	fn handle_left(&mut self) {

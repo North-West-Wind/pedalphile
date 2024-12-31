@@ -4,7 +4,7 @@ use crate::{config::save_config, state::get_mut_app};
 
 use super::LeftRightHandler;
 
-pub(super) struct SaveModule {}
+pub struct SaveModule {}
 
 impl LeftRightHandler for SaveModule {
 	fn handle_left(&mut self) {

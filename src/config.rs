@@ -40,6 +40,7 @@ pub(super) fn load_config() {
 
 	// initial setup
 	app.module = Modules::get_module(app.save_state.module);
+	println!("-> {}", app.module.name());
 }
 
 pub(super) fn save_config() {
