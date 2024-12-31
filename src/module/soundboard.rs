@@ -1,10 +1,8 @@
 use std::process::Command;
 
-use mki::Keyboard;
-
 use crate::state::{get_mut_app, SaveState};
 
-use super::{LeftRightHandler, MiddleHandler, SaveStateUser};
+use super::{LeftRightHandler, MiddleHandler, RelativeKey, SaveStateUser};
 
 #[derive(PartialEq, Eq)]
 enum EditMode {
@@ -45,7 +43,7 @@ impl LeftRightHandler for SoundboardModule {
 		if self.edit_mode != EditMode::None {
 			self.tmp = (self.tmp << 1) | 1;
 			self.val_changed = true;
-		} else if Keyboard::F13.is_pressed() {
+		} else if  RelativeKey::Left.keyboard().is_pressed() {
 			let _ = Command::new("cls").args([
 				"stop"
 			]).output();
@@ -60,7 +58,7 @@ impl LeftRightHandler for SoundboardModule {
 
 impl MiddleHandler for SoundboardModule {
 	fn handle_middle(&mut self) -> bool {
-		if !Keyboard::F13.is_pressed() && self.edit_mode == EditMode::None {
+		if !RelativeKey::Left.keyboard().is_pressed() && self.edit_mode == EditMode::None {
 			return false;
 		}
 

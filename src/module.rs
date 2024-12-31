@@ -1,11 +1,14 @@
+use clicker::ClickerModule;
+use mki::Keyboard;
 use save::SaveModule;
 use soundboard::SoundboardModule;
 use voice::VoiceModule;
 
 use crate::state::{get_mut_app, SaveState};
 
+mod clicker;
 mod save;
-pub mod soundboard;
+mod soundboard;
 mod voice;
 
 #[derive(PartialEq, Eq)]
@@ -13,9 +16,32 @@ pub enum RelativeKey {
 	Left,
 	Middle,
 	Right,
+	Invalid,
 }
 
-pub fn handle_key(key: RelativeKey) {
+impl RelativeKey {
+	pub fn keyboard(&self) -> Keyboard {
+		use RelativeKey::*;
+		match self {
+			Left => Keyboard::F13,
+			Middle => Keyboard::F14,
+			Right => Keyboard::F15,
+			Invalid => Keyboard::F24, // ignored
+		}
+	}
+
+	pub fn from_keyboard(key: Keyboard) -> RelativeKey {
+		use Keyboard::*;
+		match key {
+			F13 => RelativeKey::Left,
+			F14 => RelativeKey::Middle,
+			F15 => RelativeKey::Right,
+			_ => RelativeKey::Invalid,
+		}
+	}
+}
+
+pub fn handle_key_press(key: RelativeKey) {
 	let app = get_mut_app();
 	match key {
 		RelativeKey::Middle => {
@@ -28,6 +54,7 @@ pub fn handle_key(key: RelativeKey) {
 				input_cat_act(false);
 			} else {
 				app.module.handle_left();
+				app.module.handle_left_press();
 			}
 		}
 		RelativeKey::Right => {
@@ -35,8 +62,31 @@ pub fn handle_key(key: RelativeKey) {
 				input_cat_act(true);
 			} else {
 				app.module.handle_right();
+				app.module.handle_right_press();
+			}
+		},
+		_ => {}
+	}
+}
+
+pub fn handle_key_release(key: RelativeKey) {
+	let app = get_mut_app();
+	match key {
+		RelativeKey::Left => {
+			if app.module_change {
+				input_cat_act(false);
+			} else {
+				app.module.handle_left_release();
 			}
 		}
+		RelativeKey::Right => {
+			if app.module_change {
+				input_cat_act(true);
+			} else {
+				app.module.handle_right_release();
+			}
+		},
+		_ => {}
 	}
 }
 
@@ -72,6 +122,13 @@ pub trait MiddleHandler {
 	fn handle_middle(&mut self) -> bool;
 }
 
+pub trait LeftRightHoldHandler {
+	fn handle_left_press(&mut self);
+	fn handle_left_release(&mut self);
+	fn handle_right_press(&mut self);
+	fn handle_right_release(&mut self);
+}
+
 pub trait SaveStateUser {
 	fn load(&mut self, save_state: &SaveState);
 	fn save(&mut self, save_state: &mut SaveState);
@@ -81,6 +138,7 @@ pub enum Modules {
 	Dummy,
 	Voice(VoiceModule),
 	Soundboard(SoundboardModule),
+	Clicker(ClickerModule),
 
 	Save(SaveModule),
 }
@@ -117,6 +175,40 @@ impl MiddleHandler for Modules {
 	}
 }
 
+impl LeftRightHoldHandler for Modules {
+	fn handle_left_press(&mut self) {
+		use Modules::*;
+		match self {
+			Clicker(module) => module.handle_left_press(),
+			_ => {}
+		}
+	}
+
+	fn handle_left_release(&mut self) {
+		use Modules::*;
+		match self {
+			Clicker(module) => module.handle_left_release(),
+			_ => {}
+		}
+	}
+
+	fn handle_right_press(&mut self) {
+		use Modules::*;
+		match self {
+			Clicker(module) => module.handle_right_press(),
+			_ => {}
+		}
+	}
+
+	fn handle_right_release(&mut self) {
+		use Modules::*;
+		match self {
+			Clicker(module) => module.handle_right_release(),
+			_ => {}
+		}
+	}
+}
+
 impl SaveStateUser for Modules {
 	fn load(&mut self, save_state: &SaveState) {
 		use Modules::*;
@@ -141,6 +233,7 @@ impl Modules {
 		match cat {
 			0 => Voice(VoiceModule {  }),
 			1 => Soundboard(soundboard::create_module()),
+			2 => Clicker(clicker::create_module()),
 			255 => Save(SaveModule {  }),
 			_ => Dummy
 		}
@@ -152,6 +245,7 @@ impl Modules {
 			Dummy => "Dummy",
 			Voice(_) => "Voice",
 			Soundboard(_) => "Soundboard",
+			Clicker(_) => "Clicker",
 			Save(_) => "Save",
 		}
 	}
@@ -162,6 +256,7 @@ impl Modules {
 			Dummy => "dum",
 			Voice(_) => "voi",
 			Soundboard(_) => "snd",
+			Clicker(_) => "clk",
 			Save(_) => "sav",
 		}
 	}
