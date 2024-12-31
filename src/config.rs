@@ -2,7 +2,7 @@ use std::{io::Write, path::PathBuf};
 
 use config::Config;
 
-use crate::state::{get_mut_app, SaveState};
+use crate::{module::Modules, state::{get_mut_app, SaveState}};
 
 const APP_NAME: &str = "pedalphile";
 
@@ -15,8 +15,8 @@ fn build_config() -> Config {
 	Config::builder()
 		.add_source(config::File::new(get_config_path().to_str().unwrap(), config::FileFormat::Json))
 		// set default of save state
-		.set_default("soundboard_id", save_state.soundboard_id)
-		.unwrap()
+		.set_default("module", save_state.module).unwrap()
+		.set_default("soundboard_id", save_state.soundboard_id).unwrap()
 		.build()
 		.unwrap()
 }
@@ -35,7 +35,11 @@ pub(super) fn load_config() {
 	if parsed.is_err() {
 		panic!("{:?}", parsed.unwrap_err());
 	}
-	get_mut_app().save_state = parsed.unwrap();
+	let app = get_mut_app();
+	app.save_state = parsed.unwrap();
+
+	// initial setup
+	app.module = Modules::get_module(app.save_state.module);
 }
 
 pub(super) fn save_config() {

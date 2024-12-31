@@ -4,7 +4,7 @@ use save::SaveModule;
 use soundboard::SoundboardModule;
 use voice::VoiceModule;
 
-use crate::state::{get_mut_app, SaveState};
+use crate::{config::save_config, state::{get_mut_app, SaveState}};
 
 mod clicker;
 mod save;
@@ -73,16 +73,12 @@ pub fn handle_key_release(key: RelativeKey) {
 	let app = get_mut_app();
 	match key {
 		RelativeKey::Left => {
-			if app.module_change {
-				input_cat_act(false);
-			} else {
+			if !app.module_change {
 				app.module.handle_left_release();
 			}
 		}
 		RelativeKey::Right => {
-			if app.module_change {
-				input_cat_act(true);
-			} else {
+			if !app.module_change {
 				app.module.handle_right_release();
 			}
 		},
@@ -96,8 +92,10 @@ fn toggle_cat_act() {
 		app.module.save(&mut app.save_state);
 		app.module = Modules::get_module(app.module_tmp);
 		app.module.load(&app.save_state);
+		app.save_state.module = app.module_tmp;
 		app.module_tmp = 0;
 		app.module_change = false;
+		save_config();
 		println!("-> {}", app.module.name());
 	} else {
 		app.module_change = true;

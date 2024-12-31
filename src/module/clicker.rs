@@ -1,4 +1,4 @@
-use super::LeftRightHoldHandler;
+use super::{LeftRightHoldHandler, RelativeKey};
 
 pub struct ClickerModule {
 	left_clicking: bool,
@@ -14,10 +14,14 @@ pub const fn create_module() -> ClickerModule {
 
 impl LeftRightHoldHandler for ClickerModule {
 	fn handle_left_press(&mut self) {
+		if !RelativeKey::Right.keyboard().is_pressed() {
+			return;
+		}
 		self.left_clicking = true;
 		// by the time this gets called, it should be in a thread
 		while self.left_clicking {
 			mki::Mouse::Left.click();
+			std::thread::sleep(std::time::Duration::from_millis(5));
 		}
 	}
 
@@ -26,10 +30,14 @@ impl LeftRightHoldHandler for ClickerModule {
 	}
 
 	fn handle_right_press(&mut self) {
+		if !RelativeKey::Left.keyboard().is_pressed() {
+			return;
+		}
 		self.right_clicking = true;
 		// by the time this gets called, it should be in a thread
 		while self.right_clicking {
 			mki::Mouse::Right.click();
+			std::thread::sleep(std::time::Duration::from_millis(5));
 		}
 	}
 

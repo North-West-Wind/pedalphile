@@ -33,11 +33,13 @@ impl App {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SaveState {
+	pub module: u8,
 	pub soundboard_id: u32,
 }
 
 const fn create_save_state() -> SaveState {
 	SaveState {
+		module: 0,
 		soundboard_id: 0,
 	}
 }
