@@ -77,6 +77,7 @@ impl MiddleHandler for SoundboardModule {
 			}
 			self.id = ((self.dir as u32) << 5) | self.file as u32;
 			get_mut_app().println(format!("{}/{}", self.dir, self.file));
+			self.save(&mut get_mut_app().save_state);
 		}
 		self.tmp = 0;
 

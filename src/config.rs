@@ -2,7 +2,7 @@ use std::{io::Write, path::PathBuf};
 
 use config::Config;
 
-use crate::{module::Modules, state::{get_mut_app, SaveState}};
+use crate::{module::{Modules, SaveStateUser}, state::{get_mut_app, SaveState}};
 
 const APP_NAME: &str = "pedalphile";
 
@@ -40,6 +40,7 @@ pub(super) fn load_config() {
 
 	// initial setup
 	app.module = Modules::get_module(app.save_state.module);
+	app.module.load(&app.save_state);
 	println!("-> {}", app.module.name());
 }
 
