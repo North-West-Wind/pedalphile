@@ -168,6 +168,7 @@ impl MiddleHandler for Modules {
 		use Modules::*;
 		match self {
 			Soundboard(module) => module.handle_middle(),
+			Clicker(module) => module.handle_middle(),
 			_ => false
 		}
 	}
