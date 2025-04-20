@@ -20,7 +20,7 @@ pub struct SoundboardModule {
 	val_changed: bool,
 }
 
-pub(super) const fn create_module() -> SoundboardModule {
+pub(super) fn create_module() -> SoundboardModule {
 	SoundboardModule {
 		edit_mode: EditMode::None,
 		id: 0,

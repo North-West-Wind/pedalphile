@@ -1,12 +1,14 @@
 use clicker::ClickerModule;
 use mki::Keyboard;
 use save::SaveModule;
+use sequence::SequenceModule;
 use soundboard::SoundboardModule;
 use voice::VoiceModule;
 
 use crate::{config::save_config, state::{get_mut_app, SaveState}};
 
 mod clicker;
+mod sequence;
 mod save;
 mod soundboard;
 mod voice;
@@ -30,7 +32,7 @@ impl RelativeKey {
 		}
 	}
 
-	pub fn from_keyboard(key: Keyboard) -> RelativeKey {
+	pub fn from_keyboard(key: &Keyboard) -> RelativeKey {
 		use Keyboard::*;
 		match key {
 			F13 => RelativeKey::Left,
@@ -41,8 +43,9 @@ impl RelativeKey {
 	}
 }
 
-pub fn handle_key_press(key: RelativeKey) {
+pub fn handle_key_press(keyboard: &Keyboard) {
 	let app = get_mut_app();
+	let key = RelativeKey::from_keyboard(&keyboard);
 	match key {
 		RelativeKey::Middle => {
 			if app.module_change || !app.module.handle_middle() {
@@ -65,12 +68,17 @@ pub fn handle_key_press(key: RelativeKey) {
 				app.module.handle_right_press();
 			}
 		},
-		_ => {}
+		RelativeKey::Invalid => {
+			if !app.module_change {
+				app.module.handle_key_press(keyboard);
+			}
+		}
 	}
 }
 
-pub fn handle_key_release(key: RelativeKey) {
+pub fn handle_key_release(keyboard: &Keyboard) {
 	let app = get_mut_app();
+	let key = RelativeKey::from_keyboard(keyboard);
 	match key {
 		RelativeKey::Left => {
 			if !app.module_change {
@@ -82,6 +90,11 @@ pub fn handle_key_release(key: RelativeKey) {
 				app.module.handle_right_release();
 			}
 		},
+		RelativeKey::Invalid => {
+			if !app.module_change {
+				app.module.handle_key_release(keyboard);
+			}
+		}
 		_ => {}
 	}
 }
@@ -99,6 +112,7 @@ fn toggle_cat_act() {
 		println!("-> {}", app.module.name());
 	} else {
 		app.module_change = true;
+		println!("<-");
 	}
 }
 
@@ -108,6 +122,7 @@ fn input_cat_act(up: bool) {
 	if up {
 		app.module_tmp |= 1;
 	}
+	println!("<- {}", app.module_tmp);
 }
 
 pub trait LeftRightHandler {
@@ -127,6 +142,11 @@ pub trait LeftRightHoldHandler {
 	fn handle_right_release(&mut self);
 }
 
+pub trait OtherKeyHandler {
+	fn handle_key_press(&mut self, key: &Keyboard);
+	fn handle_key_release(&mut self, key: &Keyboard);
+}
+
 pub trait SaveStateUser {
 	fn load(&mut self, save_state: &SaveState);
 	fn save(&mut self, save_state: &mut SaveState);
@@ -137,6 +157,7 @@ pub enum Modules {
 	Voice(VoiceModule),
 	Soundboard(SoundboardModule),
 	Clicker(ClickerModule),
+	Sequence(SequenceModule),
 
 	Save(SaveModule),
 }
@@ -147,6 +168,7 @@ impl LeftRightHandler for Modules {
 		match self {
 			Voice(module) => module.handle_left(),
 			Soundboard(module) => module.handle_left(),
+			Sequence(module) => module.handle_left(),
 			Save(module) => module.handle_left(),
 			_ => {}
 		}
@@ -157,6 +179,7 @@ impl LeftRightHandler for Modules {
 		match self {
 			Voice(module) => module.handle_right(),
 			Soundboard(module) => module.handle_right(),
+			Sequence(module) => module.handle_right(),
 			Save(module) => module.handle_right(),
 			_ => {}
 		}
@@ -169,6 +192,7 @@ impl MiddleHandler for Modules {
 		match self {
 			Soundboard(module) => module.handle_middle(),
 			Clicker(module) => module.handle_middle(),
+			Sequence(module) => module.handle_middle(),
 			_ => false
 		}
 	}
@@ -208,11 +232,30 @@ impl LeftRightHoldHandler for Modules {
 	}
 }
 
+impl OtherKeyHandler for Modules {
+	fn handle_key_press(&mut self, key: &Keyboard) {
+		use Modules::*;
+		match self {
+			Sequence(module) => module.handle_key_press(key),
+			_ => {}
+		}
+	}
+
+	fn handle_key_release(&mut self, key: &Keyboard) {
+		use Modules::*;
+		match self {
+			Sequence(module) => module.handle_key_release(key),
+			_ => {}
+		}
+	}
+}
+
 impl SaveStateUser for Modules {
 	fn load(&mut self, save_state: &SaveState) {
 		use Modules::*;
 		match self {
 			Soundboard(module) => module.load(save_state),
+			Sequence(module) => module.load(save_state),
 			_ => {}
 		}
 	}
@@ -221,18 +264,20 @@ impl SaveStateUser for Modules {
 		use Modules::*;
 		match self {
 			Soundboard(module) => module.save(save_state),
+			Sequence(module) => module.save(save_state),
 			_ => {}
 		}
 	}
 }
 
 impl Modules {
-	pub const fn get_module(cat: u8) -> Modules {
+	pub fn get_module(cat: u8) -> Modules {
 		use Modules::*;
 		match cat {
 			0 => Voice(VoiceModule {  }),
 			1 => Soundboard(soundboard::create_module()),
 			2 => Clicker(clicker::create_module()),
+			3 => Sequence(sequence::create_module()),
 			255 => Save(SaveModule {  }),
 			_ => Dummy
 		}
@@ -245,6 +290,7 @@ impl Modules {
 			Voice(_) => "Voice",
 			Soundboard(_) => "Soundboard",
 			Clicker(_) => "Clicker",
+			Sequence(_) => "Sequence",
 			Save(_) => "Save",
 		}
 	}
@@ -256,6 +302,7 @@ impl Modules {
 			Voice(_) => "voi",
 			Soundboard(_) => "snd",
 			Clicker(_) => "clk",
+			Sequence(_) => "seq",
 			Save(_) => "sav",
 		}
 	}

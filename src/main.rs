@@ -2,19 +2,20 @@ use std::{thread::sleep, time::Duration};
 
 use config::load_config;
 use mki::{Action, Event, Keyboard, State};
-use module::RelativeKey;
+use state::setup;
 
 mod config;
 mod module;
 mod state;
 
 fn main() {
+	setup();
     load_config();
-    mki::bind_any_key(double_fire_kb(|key, state| {
+    mki::bind_any_key(double_fire_kb(|keyboard, state| {
         use State::*;
         match state {
-            Pressed => module::handle_key_press(RelativeKey::from_keyboard(key)),
-            Released => module::handle_key_release(RelativeKey::from_keyboard(key)),
+            Pressed => module::handle_key_press(&keyboard),
+            Released => module::handle_key_release(&keyboard),
         }
     }));
 
