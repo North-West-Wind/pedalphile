@@ -1,24 +1,11 @@
 use std::{io::Write, path::PathBuf};
 
-use config::Config;
-
 use crate::{module::{Modules, SaveStateUser}, state::{get_mut_app, SaveState}};
 
 const APP_NAME: &str = "pedalphile";
 
 fn get_config_path() -> PathBuf {
 	dirs::config_dir().unwrap().join(APP_NAME).join("savestate.json")
-}
-
-fn build_config() -> Config {
-	let save_state = &get_mut_app().save_state;
-	Config::builder()
-		.add_source(config::File::new(get_config_path().to_str().unwrap(), config::FileFormat::Json))
-		// set default of save state
-		.set_default("module", save_state.module).unwrap()
-		.set_default("soundboard_id", save_state.soundboard_id).unwrap()
-		.build()
-		.unwrap()
 }
 
 pub(super) fn load_config() {
@@ -29,9 +16,7 @@ pub(super) fn load_config() {
 		let _ = output.unwrap().write_all(b"{}");
 	}
 
-	let settings = build_config();
-
-	let parsed = settings.try_deserialize::<SaveState>();
+	let parsed = serde_json::from_str::<SaveState>(&std::fs::read_to_string(path).unwrap());
 	if parsed.is_err() {
 		panic!("{:?}", parsed.unwrap_err());
 	}

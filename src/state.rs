@@ -17,7 +17,7 @@ pub fn create_app() -> App {
 		module_change: false,
 		module_tmp: 0,
 		module: Modules::Dummy,
-		save_state: create_save_state(),
+		save_state: SaveState::default(),
 	}
 }
 
@@ -42,10 +42,12 @@ pub struct SaveState {
 	pub sequences: HashMap<u32, Vec<String>>
 }
 
-fn create_save_state() -> SaveState {
-	SaveState {
-		module: 0,
-		soundboard_id: 0,
-		sequences: HashMap::new()
+impl Default for SaveState {
+	fn default() -> Self {
+		Self {
+			module: 0,
+			soundboard_id: 0,
+			sequences: HashMap::new()
+		}
 	}
 }
